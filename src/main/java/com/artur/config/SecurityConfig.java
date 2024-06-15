@@ -41,6 +41,10 @@ public class SecurityConfig {
     public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http, JwtDecoder decoder)
             throws Exception {
         OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
+        http.getConfigurer(OAuth2AuthorizationServerConfigurer.class)
+                .oidc(oidc -> oidc.clientRegistrationEndpoint(endpoint -> {
+                    endpoint.authenticationProviders(CustomClientMetadataConfig.configure());
+                }));
         http
                 .exceptionHandling((exceptions) -> exceptions
                         .defaultAuthenticationEntryPointFor(
