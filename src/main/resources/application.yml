@@ -33,7 +33,6 @@ spring:
                 - "profile"
             require-authorization-consent: true
 
-
 server:
   port: 8090
 
@@ -45,3 +44,4 @@ service:
 rsa:
   private-key: classpath:certs/private.pem
   public-key: classpath:certs/public.pem
+
