@@ -78,6 +78,21 @@ public class SecurityConfig {
         return authProvider;
     }
 
+    @Bean
+    public OAuth2TokenCustomizer<JwtEncodingContext> jwtTokenCustomizer(){
+        return context -> {
+            Authentication auth = context.getPrincipal();
+          if(
+                  auth.getPrincipal() instanceof UserEntity  &&
+                          (context.getTokenType().equals(OAuth2TokenType.ACCESS_TOKEN) ||
+                          context.getTokenType().equals(OAuth2TokenType.REFRESH_TOKEN))
+          ){
+              context.getClaims().claim("sub",
+                      ((UserEntity) auth.getPrincipal()).getId().toString());
+          }
+        };
+    }
+
 
     @Bean
     public JWKSource<SecurityContext> jwkSource(){

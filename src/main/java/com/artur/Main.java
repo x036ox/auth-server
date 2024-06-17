@@ -33,8 +33,8 @@ public class Main {
     @Bean
     public CommandLineRunner commandLineRunner(UserRepository userRepository, PasswordEncoder passwordEncoder, RegisteredClientRepository clientRepository){
         return args ->{
-            if(Objects.isNull(userRepository.findByUsername("admin"))) {
-                userRepository.save(new UserEntity(null, "admin", passwordEncoder.encode("11"), "ROLE_ADMIN", Date.from(Instant.now())));
+            if(!userRepository.existsByUsername("admin")) {
+                userRepository.save(new UserEntity(null, "admin", "admin", passwordEncoder.encode("11"), "ROLE_ADMIN",  Date.from(Instant.now())));
             }
             if(Objects.isNull(clientRepository.findByClientId("registrar-client"))){
                 RegisteredClient client = RegisteredClient.withId(UUID.randomUUID().toString())
