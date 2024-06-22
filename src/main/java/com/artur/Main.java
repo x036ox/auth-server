@@ -34,7 +34,7 @@ public class Main {
     public CommandLineRunner commandLineRunner(UserRepository userRepository, PasswordEncoder passwordEncoder, RegisteredClientRepository clientRepository){
         return args ->{
             if(!userRepository.existsByUsername("admin")) {
-                userRepository.save(new UserEntity(null, "admin", "admin", passwordEncoder.encode("11"), "ROLE_ADMIN",  Date.from(Instant.now())));
+                userRepository.save(new UserEntity(null, "admin", "admin", passwordEncoder.encode("11"), "ROLE_ADMIN",  Instant.now()));
             }
             if(Objects.isNull(clientRepository.findByClientId("registrar-client"))){
                 RegisteredClient client = RegisteredClient.withId(UUID.randomUUID().toString())

@@ -61,6 +61,7 @@ public class CustomClientMetadataConfig {
             ClientSettings.Builder clientSettingsBuilder = ClientSettings.withSettings(
                     registeredClient.getClientSettings().getSettings());
             clientSettingsBuilder.requireProofKey(false);
+            clientSettingsBuilder.requireAuthorizationConsent(false);
             if (!CollectionUtils.isEmpty(this.customClientMetadata)) {
                 clientRegistration.getClaims().forEach((claim, value) -> {
                     if (this.customClientMetadata.contains(claim)) {

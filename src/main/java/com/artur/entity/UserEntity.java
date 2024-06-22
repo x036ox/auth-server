@@ -13,8 +13,8 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.time.Instant;
 import java.util.Collection;
-import java.util.Date;
 
 @Entity
 @Data
@@ -30,7 +30,7 @@ public class UserEntity implements UserDetails {
     private String email;
     private String password;
     private String authority;
-    private Date dateCreated;
+    private Instant dateCreated;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
