@@ -15,6 +15,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcOperations;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -26,9 +27,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.jackson2.SecurityJackson2Modules;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.server.authorization.JdbcOAuth2AuthorizationService;
-import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationService;
-import org.springframework.security.oauth2.server.authorization.OAuth2TokenType;
+import org.springframework.security.oauth2.server.authorization.*;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer;
@@ -81,16 +80,10 @@ public class SecurityConfig {
                 .formLogin(login -> login.loginPage("/login").permitAll())
                 .csrf(csrf -> csrf.ignoringRequestMatchers("/registration", "/login"))
                 .authorizeHttpRequests(matcherRegistry -> matcherRegistry
-//                        .requestMatchers(HttpMethod.GET, "/**").hasAuthority("SCOPE_READ")
-//                        .requestMatchers(HttpMethod.POST, "/**").hasAuthority("SCOPE_CREATE")
-//                        .requestMatchers(HttpMethod.PUT, "/**").hasAuthority("SCOPE_EDIT")
-//                        .requestMatchers(HttpMethod.DELETE, "/**").hasAuthority("SCOPE_DELETE")
-                                .requestMatchers("/clear").permitAll()
-                        .requestMatchers("/registration").permitAll()
-                        .requestMatchers("/static/**").permitAll()
+                                .requestMatchers("/registration").permitAll()
+                                .requestMatchers("/static/**").permitAll()
                                 .requestMatchers("/*.*").permitAll()
-                                .requestMatchers("/test").permitAll()
-                        .anyRequest().authenticated()
+                                .anyRequest().authenticated()
                 );
         return http.build();
     }
@@ -117,6 +110,11 @@ public class SecurityConfig {
         authProvider.setUserDetailsService(userDetailsService);
         authProvider.setPasswordEncoder(passwordEncoder);
         return authProvider;
+    }
+
+    @Bean
+    public OAuth2AuthorizationConsentService authorizationConsentService(JdbcOperations jdbcOperations, RegisteredClientRepository registeredClientRepository){
+        return new JdbcOAuth2AuthorizationConsentService(jdbcOperations, registeredClientRepository);
     }
 
     @Bean
