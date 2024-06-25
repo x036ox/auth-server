@@ -23,6 +23,7 @@ public class UserService implements UserDetailsService {
 
     @Transactional(rollbackOn = Exception.class)
     public UserEntity registerUser(UserCreateRequest userCreateRequest) throws Exception {
+        System.out.println(userCreateRequest.getEmail());
         if(userRepository.existsByEmail(userCreateRequest.getEmail())){
            throw new AlreadyExistsException("User with this email already exists");
         }

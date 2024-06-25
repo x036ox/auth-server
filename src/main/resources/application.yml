@@ -7,7 +7,10 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
-    show-sql: false
+    show-sql: true
+  sql:
+    init:
+      mode: always
   servlet:
     multipart:
       max-file-size: 10MB
@@ -26,5 +29,5 @@ rsa:
 
 logging:
   level:
-    org.springframework.security: TRACE
+    com.fasterxml.jackson.databind: TRACE
 
