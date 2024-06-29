@@ -31,16 +31,21 @@ public class UserEntity implements UserDetails {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @JsonDeserialize(as = Long.class)
     private Long id;
-    private String username;
     private String email;
     private String password;
-    private String authority;
+    private String authorities;
+    private String nickname;
     private Instant dateCreated;
 
     @JsonIgnore
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return AuthorityUtils.commaSeparatedStringToAuthorityList(authority);
+        return AuthorityUtils.commaSeparatedStringToAuthorityList(authorities);
+    }
+
+    @Override
+    public String getUsername() {
+        return this.email;
     }
 
     @JsonIgnore

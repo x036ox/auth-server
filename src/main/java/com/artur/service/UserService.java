@@ -27,14 +27,14 @@ public class UserService implements UserDetailsService {
         if(userRepository.existsByEmail(userCreateRequest.getEmail())){
            throw new AlreadyExistsException("User with this email already exists");
         }
-        UserEntity userEntity = userRepository.save(UserEntity.builder()
+
+        return userRepository.save(UserEntity.builder()
                 .email(userCreateRequest.getEmail())
                 .password(passwordEncoder.encode(userCreateRequest.getPassword()))
-                .username(userCreateRequest.getUsername())
-                .authority("ROLE_USER")
+                .nickname(userCreateRequest.getUsername())
+                .authorities("ROLE_USER")
                 .dateCreated(Instant.now())
                 .build());
-        return userEntity;
     }
 
     @Override

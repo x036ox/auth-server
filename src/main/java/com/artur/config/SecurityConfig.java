@@ -2,6 +2,7 @@ package com.artur.config;
 
 import com.artur.entity.UserEntity;
 import com.artur.mixin.LongMixIn;
+import com.artur.service.OidcUserInfoService;
 import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.jwk.JWK;
@@ -26,20 +27,26 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.jackson2.SecurityJackson2Modules;
+import org.springframework.security.oauth2.core.oidc.OidcUserInfo;
+import org.springframework.security.oauth2.core.oidc.endpoint.OidcParameterNames;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.server.authorization.*;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer;
 import org.springframework.security.oauth2.server.authorization.jackson2.OAuth2AuthorizationServerJackson2Module;
+import org.springframework.security.oauth2.server.authorization.oidc.authentication.OidcUserInfoAuthenticationContext;
+import org.springframework.security.oauth2.server.authorization.oidc.authentication.OidcUserInfoAuthenticationToken;
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
 import org.springframework.security.oauth2.server.authorization.token.JwtEncodingContext;
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenCustomizer;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import org.springframework.security.web.util.matcher.MediaTypeRequestMatcher;
 
 import java.util.List;
+import java.util.function.Function;
 
 @Configuration
 @EnableWebSecurity
@@ -52,13 +59,28 @@ public class SecurityConfig {
 
     @Bean
     @Order(1)
-    public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http, JwtDecoder decoder)
+    public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http,
+                                                                      JwtDecoder decoder,
+                                                                      OidcUserInfoService userInfoService)
             throws Exception {
         OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
+
+        Function<OidcUserInfoAuthenticationContext, OidcUserInfo> userInfoMapper = (context) -> {
+            OidcUserInfoAuthenticationToken authentication = context.getAuthentication();
+
+            JwtAuthenticationToken principal = (JwtAuthenticationToken) authentication.getPrincipal();
+            return OidcUserInfo.builder()
+                    .claims(claims -> claims.putAll(userInfoService.loadByUsername(principal.getToken().getSubject()).getClaims()))
+                    .claims(claims -> claims.putAll(principal.getToken().getClaims()))
+                    .build();
+        };
+
         http.getConfigurer(OAuth2AuthorizationServerConfigurer.class)
-                .oidc(oidc -> oidc.clientRegistrationEndpoint(endpoint -> {
-                    endpoint.authenticationProviders(CustomClientMetadataConfig.configure());
-                }));
+                .oidc(oidc -> {
+                            oidc.clientRegistrationEndpoint(endpoint ->
+                                    endpoint.authenticationProviders(CustomClientMetadataConfig.configure()));
+                            oidc.userInfoEndpoint(userInfo -> userInfo.userInfoMapper(userInfoMapper));
+                        });
         http
                 .exceptionHandling((exceptions) -> exceptions
                         .defaultAuthenticationEntryPointFor(
@@ -118,15 +140,12 @@ public class SecurityConfig {
     }
 
     @Bean
-    public OAuth2TokenCustomizer<JwtEncodingContext> jwtTokenCustomizer(){
+    public OAuth2TokenCustomizer<JwtEncodingContext> jwtTokenCustomizer(OidcUserInfoService userInfoService){
         return context -> {
             Authentication auth = context.getPrincipal();
-          if(
-                  auth.getPrincipal() instanceof UserEntity  &&
-                          (context.getTokenType().equals(OAuth2TokenType.ACCESS_TOKEN) ||
-                          context.getTokenType().equals(OAuth2TokenType.REFRESH_TOKEN))
-          ){
-              context.getClaims().claim("user-id", ((UserEntity) auth.getPrincipal()).getId());
+          if(context.getTokenType().getValue().equals(OidcParameterNames.ID_TOKEN)){
+              OidcUserInfo oidcUserInfo = userInfoService.loadByUsername(context.getPrincipal().getName());
+              context.getClaims().claims(claims -> claims.putAll(oidcUserInfo.getClaims()));
           }
         };
     }
