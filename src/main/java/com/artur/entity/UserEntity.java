@@ -28,9 +28,8 @@ import java.util.Collection;
 public class UserEntity implements UserDetails {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @JsonDeserialize(as = Long.class)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private String id;
     private String email;
     private String password;
     private String authorities;
@@ -45,7 +44,7 @@ public class UserEntity implements UserDetails {
 
     @Override
     public String getUsername() {
-        return this.email;
+        return this.id;
     }
 
     @JsonIgnore

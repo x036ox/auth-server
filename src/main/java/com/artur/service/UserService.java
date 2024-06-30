@@ -9,10 +9,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.keygen.Base64StringKeyGenerator;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.Optional;
 
 @Service
 public class UserService implements UserDetailsService {
@@ -23,7 +25,6 @@ public class UserService implements UserDetailsService {
 
     @Transactional(rollbackOn = Exception.class)
     public UserEntity registerUser(UserCreateRequest userCreateRequest) throws Exception {
-        System.out.println(userCreateRequest.getEmail());
         if(userRepository.existsByEmail(userCreateRequest.getEmail())){
            throw new AlreadyExistsException("User with this email already exists");
         }
@@ -39,6 +40,6 @@ public class UserService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        return userRepository.findByEmail(username);
+        return userRepository.findById(username).orElseGet(() -> userRepository.findByEmail(username));
     }
 }
