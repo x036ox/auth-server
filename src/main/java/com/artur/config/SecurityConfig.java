@@ -105,6 +105,7 @@ public class SecurityConfig {
                                 .requestMatchers("/registration").permitAll()
                                 .requestMatchers("/static/**").permitAll()
                                 .requestMatchers("/*.*").permitAll()
+                                .requestMatchers("/picture/*").permitAll()
                                 .anyRequest().authenticated()
                 );
         return http.build();

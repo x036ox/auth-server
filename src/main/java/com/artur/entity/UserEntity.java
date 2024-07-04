@@ -34,6 +34,7 @@ public class UserEntity implements UserDetails {
     private String password;
     private String authorities;
     private String nickname;
+    private String picture;
     private Instant dateCreated;
 
     @JsonIgnore

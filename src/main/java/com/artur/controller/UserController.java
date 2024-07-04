@@ -4,12 +4,15 @@ import com.artur.exception.AlreadyExistsException;
 import com.artur.request.model.UserCreateRequest;
 import com.artur.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -17,11 +20,11 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.security.web.savedrequest.DefaultSavedRequest;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 
+import java.io.FileNotFoundException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URI;
 import java.util.Objects;
 
@@ -78,5 +81,26 @@ public class UserController {
             headers.setLocation(URI.create("/login"));
         }
         return ResponseEntity.status(HttpStatus.FOUND).headers(headers).build();
+    }
+
+    @GetMapping(value = "/picture/{name}", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    public ResponseEntity<?> getUserPicture(@PathVariable String name, HttpServletResponse response){
+        try(
+                InputStream inputStream = userService.getPicture(name);
+                OutputStream outputStream = response.getOutputStream();
+                ) {
+            byte[] buffer = new byte[8192];
+            for(int length; (length = inputStream.read(buffer)) > 0;){
+                outputStream.write(buffer, 0, length);
+            }
+            outputStream.flush();
+            return ResponseEntity.ok(null);
+        } catch (FileNotFoundException e) {
+            logger.warn("User picture with name: " + name + " was not found", e);
+            return ResponseEntity.notFound().build();
+        }catch (Exception e){
+            logger.error("Error occurred while getting user picture, name: " + name, e);
+            return ResponseEntity.internalServerError().build();
+        }
     }
 }
