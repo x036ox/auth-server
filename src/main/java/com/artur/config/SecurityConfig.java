@@ -1,6 +1,5 @@
 package com.artur.config;
 
-import com.artur.entity.UserEntity;
 import com.artur.mixin.LongMixIn;
 import com.artur.service.OidcUserInfoService;
 import com.fasterxml.jackson.databind.Module;
@@ -16,13 +15,13 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcOperations;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -45,8 +44,11 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import org.springframework.security.web.util.matcher.MediaTypeRequestMatcher;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Configuration
 @EnableWebSecurity
@@ -147,6 +149,13 @@ public class SecurityConfig {
           if(context.getTokenType().getValue().equals(OidcParameterNames.ID_TOKEN)){
               OidcUserInfo oidcUserInfo = userInfoService.loadByUsername(context.getPrincipal().getName());
               context.getClaims().claims(claims -> claims.putAll(oidcUserInfo.getClaims()));
+          } else if (context.getTokenType().equals(OAuth2TokenType.ACCESS_TOKEN)) {
+              context.getClaims().claims((claims) -> {
+                  Set<String> roles = AuthorityUtils.authorityListToSet(context.getPrincipal().getAuthorities())
+                          .stream()
+                          .collect(Collectors.collectingAndThen(Collectors.toSet(), Collections::unmodifiableSet));
+                  claims.put("roles", roles);
+              });
           }
         };
     }
