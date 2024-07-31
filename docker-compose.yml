@@ -1,0 +1,18 @@
+services:
+  auth-server:
+    image: artur110/auth-server
+    restart: unless-stopped
+    environment:
+      - SPRING_ACTIVE_PROFILES=prod
+    ports:
+      - "8090:8090"
+    depends_on:
+      - db
+  db:
+    image: mysql:latest
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: adminadmin
+      MYSQL_DATABASE: yout
+    ports:
+      - "3307:3306"

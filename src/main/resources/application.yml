@@ -7,7 +7,7 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
-    show-sql: true
+    show-sql: false
   sql:
     init:
       mode: always
@@ -30,3 +30,7 @@ path:
   user-picture: user/picture/
   default-user-picture: /static/default-user.png
 
+
+#logging:
+#  level:
+#    org.springframework.security: TRACE
