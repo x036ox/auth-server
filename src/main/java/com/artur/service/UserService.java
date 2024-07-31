@@ -2,6 +2,7 @@ package com.artur.service;
 
 import com.artur.entity.UserEntity;
 import com.artur.exception.AlreadyExistsException;
+import com.artur.objectstorage.service.ObjectStorageService;
 import com.artur.repository.UserRepository;
 import com.artur.request.model.UserCreateRequest;
 import jakarta.transaction.Transactional;

@@ -10,6 +10,7 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.mock.web.MockMultipartFile;
 
 import java.io.FileInputStream;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
@@ -28,7 +29,7 @@ class UserServiceTest extends MainTest {
     @Test
     void registerUser() throws Exception {
         Path picturePath = null;
-        try {
+        try (InputStream picInputStream = new ClassPathResource("static/default-user.png").getInputStream()){
             UserCreateRequest userCreateRequest = new UserCreateRequest(
                     "email@gmail.com",
                     "username",
@@ -36,7 +37,7 @@ class UserServiceTest extends MainTest {
                     new MockMultipartFile("picture",
                             "default-user.png",
                             "image/png",
-                            new ClassPathResource("static/default-user.png").getInputStream())
+                            picInputStream)
             );
             UserEntity userEntity = userService.registerUser(userCreateRequest);
             picturePath = Path.of(dataPath + userPicturePath + userEntity.getId() + ".png");
@@ -46,7 +47,7 @@ class UserServiceTest extends MainTest {
             assertNotEquals(userEntity.getPassword(), "password");
         } finally {
             if(Objects.nonNull(picturePath)){
-                Files.deleteIfExists(picturePath);
+                Files.delete(picturePath);
             }
         }
     }
